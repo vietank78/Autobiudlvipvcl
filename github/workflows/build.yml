@@ -1,0 +1,43 @@
+name: Build AutoBuild Mod
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch: # Cho phép bạn chạy thủ công từ giao diện GitHub anytime
+
+jobs:
+  build:
+    runs-on: ubuntu-latest # Môi trường build chuẩn Linux
+    
+    steps:
+      # Bước 1: Checkout code về máy build
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Bước 2: Cài đặt Java 17 (Minecraft 1.21.11 yêu cầu Java 17 trở lên)
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # Bước 3: Kiểm tra và cấp quyền cho Gradle Wrapper
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v2
+        
+      - name: Grant execute permission to gradlew
+        run: chmod +x gradlew
+
+      # Bước 4: Build file Jar bằng Gradle
+      - name: Build with Gradle
+        run: ./gradlew jar
+
+      # Bước 5: Đóng gói file .jar và Upload lên GitHub làm Artifact (để tải về)
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: autobuild-mod-jar # Tên của file khi bạn tải về (sẽ là file .zip chứa .jar)
+          path: build/libs/*.jar
+          retention-days: 7 # Giữ file kết quả trong 7 ngày để bạn có thể tải về
